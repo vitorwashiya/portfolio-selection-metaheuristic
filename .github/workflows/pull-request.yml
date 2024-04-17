@@ -14,7 +14,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Pull Request para main
           # author: vitorwashiya <washiya.hideki@outlook.com>
           # committer: vitorwashiya <washiya.hideki@outlook.com>
