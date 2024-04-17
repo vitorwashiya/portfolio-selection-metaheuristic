@@ -3,7 +3,7 @@
 # create virtual environment
 
 ```bash
-  conda create -n <portfolio_selection_metaheuristics>
+  conda create -n portfolio_selection_metaheuristics
 ```
 
 # install requirements

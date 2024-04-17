@@ -1,0 +1,16 @@
+# File: .github/workflows/pull-request.yml
+
+on:
+  push:
+    branches:
+      - develop
+
+name: create-pull-request workflow
+jobs:
+  createPullRequest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Pull Request
+        uses: vitorwashiya/create-pull-request@v5
+        with:
+          destination_branch: "main"
