@@ -11,6 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create Pull Request
-        uses: vitorwashiya/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v5
         with:
           destination_branch: "main"
