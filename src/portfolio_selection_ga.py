@@ -248,6 +248,15 @@ class PortfolioSelectionGA:
         return False
 
     def step(self):
+        """
+        Performs a single step of the genetic algorithm.
+
+        This method updates the state of the genetic algorithm by evaluating the fitness of the current population,
+        determining if there has been an improvement in the best fitness value, and updating the iteration count.
+
+        Returns:
+            None
+        """
         best_fit = np.min(self.popl_fit)
         if self.prv_best_fit > best_fit and abs(best_fit -
                                                 self.prv_best_fit) > 1e-5:
