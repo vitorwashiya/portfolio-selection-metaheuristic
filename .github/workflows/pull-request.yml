@@ -16,7 +16,6 @@ jobs:
         with:
           commit-message: Pull Request para main
           title: "Pull Request para main"
-          branch: main # The branch where the PR will be created
-          base: develop # The branch you want to merge into
+          branch: develop # The branch where the PR will be created
           labels: |
             automated pr
