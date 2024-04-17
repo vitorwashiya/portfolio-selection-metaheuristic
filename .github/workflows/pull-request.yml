@@ -5,12 +5,21 @@ on:
     branches:
       - develop
 
-name: create-pull-request workflow
 jobs:
   createPullRequest:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
-          branch: "main"
+          commit-message: Pull Request para main
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          signoff: false
+          base: main
+          branch: develop
+          title: "Pull Request para main"
+          labels: |
+            automated pr
