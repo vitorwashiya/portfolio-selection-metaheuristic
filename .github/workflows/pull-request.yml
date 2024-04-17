@@ -16,6 +16,7 @@ jobs:
         with:
           commit-message: Pull Request para main
           author: vitorwashiya <washiya.hideki@outlook.com>
+          committer: vitorwashiya <washiya.hideki@outlook.com>
           signoff: false
           base: main
           branch: develop
