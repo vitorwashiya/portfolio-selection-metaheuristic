@@ -16,6 +16,5 @@ jobs:
         with:
           commit-message: Pull Request para main
           title: "Pull Request para main"
-          branch: develop # The branch where the PR will be created
           labels: |
             automated pr
