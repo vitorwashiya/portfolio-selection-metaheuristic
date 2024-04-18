@@ -1,5 +1,3 @@
-# File: .github/workflows/pull-request.yml
-
 name: Create Pull Request
 
 on:
@@ -14,26 +12,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-
-      - name: Install dependencies
-        run: pip install requests
-
       - name: Create Pull Request
-        run: |
-          TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          REPO_API_URL=$(jq -r .repository.url $GITHUB_EVENT_PATH)
-          PR_TITLE="Merge develop into main"
-          PR_BODY="This is an automated pull request to merge changes from develop into main."
-
-          curl -X POST "$REPO_API_URL/pulls" \
-            -H "Authorization: token $TOKEN" \
-            -d '{
-              "title": "'"$PR_TITLE"'",
-              "body": "'"$PR_BODY"'",
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/${{ github.repository }}/pulls
+          headers: |
+            authorization: token ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            {
+              "title": "Merge develop into main",
               "head": "develop",
-              "base": "main"
-            }'
+              "base": "main",
+              "body": "This is an automated pull request to merge changes from develop into main."
+            }
