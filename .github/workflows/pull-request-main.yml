@@ -30,8 +30,6 @@ jobs:
           BASE="main"
           HEAD="release/${{github.sha}}" 
           RESPONSE=$(curl -X POST -s -H "Authorization: token $TOKEN" -d "{\"title\":\"$TITLE\",\"body\":\"$BODY\",\"head\":\"$HEAD\",\"base\":\"$BASE\"}" "$URL")
-          echo "$RESPONSE"
-          echo "$HEAD"
           echo "::set-output name=url::$(echo "$RESPONSE" | jq -r '.html_url')"
 
       - name: PR URL
