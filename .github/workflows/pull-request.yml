@@ -16,6 +16,9 @@ jobs:
       - name: Create branch
         run: git checkout -b release/${{ github.run_number }}
 
+      - name: Push changes
+        run: git push origin release/${{ github.run_number }}
+
       - name: Create Pull Request
         id: create_pr
         run: |
@@ -28,7 +31,7 @@ jobs:
           HEAD="release/${{ github.run_number }}" 
           RESPONSE=$(curl -X POST -s -H "Authorization: token $TOKEN" -d "{\"title\":\"$TITLE\",\"body\":\"$BODY\",\"head\":\"$HEAD\",\"base\":\"$BASE\"}" "$URL")
           echo "$RESPONSE"
-          echo "release/${{ github.run_number }}" 
+          echo "$HEAD"
           echo "::set-output name=url::$(echo "$RESPONSE" | jq -r '.html_url')"
 
       - name: PR URL
