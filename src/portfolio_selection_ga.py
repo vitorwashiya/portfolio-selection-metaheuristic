@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from scipy import stats
-from concurrent.futures import ThreadPoolExecutor
 
 POP_SIZE = 30
 MUT_RATE = 0.3
