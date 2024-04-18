@@ -1,5 +1,7 @@
 # File: .github/workflows/pull-request.yml
 
+name: Create Pull Request
+
 on:
   push:
     branches:
@@ -14,12 +16,12 @@ jobs:
 
       - name: Create Pull Request
         id: create_pr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v3
         with:
           title: "Merge develop into main"
           labels: "automated"
-          branch: "main"
           base: "main"
+          head: "develop"
           body: |
             This is an automated pull request to merge changes from develop into main.
           draft: true
