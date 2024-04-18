@@ -1,4 +1,4 @@
-name: Create Pull Request
+name: Create PR from Develop to Main
 
 on:
   push:
@@ -7,26 +7,18 @@ on:
 
 jobs:
   create_pull_request:
+    name: Create Pull Request
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Authenticate with GitHub token
-        id: auth
-        uses: octokit/auth-action@v2.x
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create Pull Request
-        uses: octokit/request-action@v2.x
+        uses: peter-evans/create-pull-request@v3
         with:
-          route: POST /repos/${{ github.repository }}/pulls
-          token: ${{ steps.auth.outputs.token }}
-          body: |
-            {
-              "title": "Merge develop into main",
-              "head": "develop",
-              "base": "main",
-              "body": "This is an automated pull request to merge changes from develop into main."
-            }
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Merge changes from develop to main"
+          branch: main
+          title: "Merge changes from develop to main"
+          body: "This pull request automatically merges changes from the develop branch to the main branch."
+          draft: true
