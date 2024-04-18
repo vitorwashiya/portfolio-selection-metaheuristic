@@ -1,4 +1,4 @@
-# portfolio-selection-metaheuristic
+# Portfolio Selection Metaheuristics
 
 # create virtual environment
 
