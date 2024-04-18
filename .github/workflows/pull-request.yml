@@ -13,6 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Create branch
+        run: git checkout -b release/${{ github.run_id }}
+
+      - name: Push changes
+        run: git push origin release/${{ github.run_id }}
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
