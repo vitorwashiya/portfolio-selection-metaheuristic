@@ -29,7 +29,6 @@ jobs:
           RESPONSE=$(curl -X POST -s -H "Authorization: token $TOKEN" -d "{\"title\":\"$TITLE\",\"body\":\"$BODY\",\"head\":\"$HEAD\",\"base\":\"$BASE\"}" "$URL")
           echo "$RESPONSE"
           PR_URL=$(echo "$RESPONSE" | jq -r '.html_url')
-          echo "PR URL: $PR_URL"
           echo "::set-output name=url::$PR_URL"
 
       - name: PR URL
