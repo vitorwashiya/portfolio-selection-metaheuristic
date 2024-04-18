@@ -1,0 +1,36 @@
+name: Create PR from Feature to Develop
+
+on:
+  push:
+    branches:
+      - feature/*
+
+jobs:
+  create_pull_request:
+    name: Create Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create branch
+        run: git checkout -b feature/${{github.sha}}
+
+      - name: Push changes
+        run: git push origin feature/${{github.sha}}
+
+      - name: Create Pull Request
+        id: create_pr
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          REPO="${{ github.repository }}"
+          TITLE="Merge changes from feature to develop"
+          BODY="This pull request automatically merges changes from the develop branch to the main branch."
+          URL="https://api.github.com/repos/$REPO/pulls"
+          BASE="develop"
+          HEAD="feature/${{github.sha}}" 
+          RESPONSE=$(curl -X POST -s -H "Authorization: token $TOKEN" -d "{\"title\":\"$TITLE\",\"body\":\"$BODY\",\"head\":\"$HEAD\",\"base\":\"$BASE\"}" "$URL")
+          echo "::set-output name=url::$(echo "$RESPONSE" | jq -r '.html_url')"
+
+      - name: PR URL
+        run: echo "The pull request URL is ${{ steps.create_pr.outputs.url }}"
