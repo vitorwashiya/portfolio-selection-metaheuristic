@@ -12,12 +12,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Authenticate with GitHub token
+        id: auth
+        uses: octokit/auth-action@v2.x
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Pull Request
         uses: octokit/request-action@v2.x
         with:
           route: POST /repos/${{ github.repository }}/pulls
-          headers: |
-            authorization: token ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.auth.outputs.token }}
           body: |
             {
               "title": "Merge develop into main",
