@@ -34,3 +34,17 @@ jobs:
 
       - name: PR URL
         run: echo "The pull request URL is ${{ steps.create_pr.outputs.url }}"
+
+  delete_branch:
+    name: Delete Branch After Merge
+    runs-on: ubuntu-latest
+    needs: [create_pull_request]
+    steps:
+      - name: Delete branch
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && contains(github.event.pull_request.merged_by.login, 'github-actions')
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          REF=$(jq -r '.pull_request.head.ref' "$GITHUB_EVENT_PATH")
+          REPO=$(jq -r '.repository.full_name' "$GITHUB_EVENT_PATH")
+          URL="https://api.github.com/repos/$REPO/git/refs/heads/$REF"
+          curl -X DELETE -s -H "Authorization: token $TOKEN" "$URL"
