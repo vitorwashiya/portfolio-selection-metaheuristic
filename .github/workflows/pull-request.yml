@@ -20,11 +20,17 @@ jobs:
         run: git push origin release/${{ github.run_id }}
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Merge changes from develop to main"
-          branch: main
-          title: "Merge changes from develop to main"
-          body: "This pull request automatically merges changes from the develop branch to the main branch."
-          draft: true
+        id: create_pr
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          REPO="${{ github.repository }}"
+          TITLE="Merge changes from develop to main"
+          BODY="This pull request automatically merges changes from the develop branch to the main branch."
+          URL="https://api.github.com/repos/$REPO/pulls"
+          BASE="main"
+          HEAD="release/${{ github.run_id }}"
+          RESPONSE=$(curl -X POST -s -H "Authorization: token $TOKEN" -d "{\"title\":\"$TITLE\",\"body\":\"$BODY\",\"head\":\"$HEAD\",\"base\":\"$BASE\"}" "$URL")
+          echo "::set-output name=url::$(echo "$RESPONSE" | jq -r '.html_url')"
+
+      - name: PR URL
+        run: echo "The pull request URL is ${{ steps.create_pr.outputs.url }}"
