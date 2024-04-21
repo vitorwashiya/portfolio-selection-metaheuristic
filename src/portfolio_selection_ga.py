@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 
-POP_SIZE = 30
-MUT_RATE = 0.3
+POP_SIZE = 20
+MUT_RATE = 0.5
 MUTA_PERC = 0.5
-MAX_ITER = 5000
+MAX_ITER = 6000
 MAX_ITER_WO_IMPRV = 100
 RISK_AVER = 0.5
 FIT_FUN = "mean_variance"
@@ -28,7 +28,6 @@ class PortfolioSelectionGA:
     - risk_aver: Risk Aversion Coefficient (Default = 0.5)
     - norm_param: Normalization Parameters with the following keys: ret_min, ret_max, var_min, var_max (Default = None)
     - fit_fun: Fitness Function (Default = "mean_variance")
-    
     - verbose: Verbose mode (Default = False)
     '''
 
