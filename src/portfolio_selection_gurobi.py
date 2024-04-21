@@ -37,12 +37,30 @@ class PortfolioSelectionGurobi:
         self.w = None
 
     def add_weights(self) -> None:
+        """
+        Adds weight variables to the model.
+
+        This method adds weight variables to the optimization model. Each weight variable represents the allocation
+        of a specific asset in the portfolio. The weight variables are continuous and have a lower bound of 0.0.
+
+        Returns:
+            None
+        """
         self.w = [
             self.model.addVar(name=str(i), vtype=GRB.CONTINUOUS, lb=0.0)
             for i in range(self.num_ast)
         ]
 
     def add_objective_function(self) -> None:
+        """
+        Adds the objective function to the optimization model.
+
+        The objective function is a combination of the expected return and the risk of the portfolio.
+        The function is minimized based on the risk aversion parameter.
+
+        Returns:
+            None
+        """
         w_exp_ret = self.exp_ret_df @ self.w
         w_var = self.w @ self.cov_mat @ self.w
 
@@ -56,9 +74,27 @@ class PortfolioSelectionGurobi:
         self.model.setObjective(function, GRB.MINIMIZE)
 
     def add_constraints(self) -> None:
+        """
+            Adds constraints to the optimization model.
+
+            This method adds a constraint to ensure that the sum of all weights in the portfolio is equal to 1,
+            which represents the requirement of full investment.
+
+            Returns:
+                None
+            """
         self.model.addConstr(sum(self.w) == 1, name="full investment")
 
-    def optimize(self):
+    def optimize(self) -> np.ndarray:
+        """
+            Optimize the portfolio selection problem.
+
+            This method adds weights, objective function, constraints, and then optimizes the model.
+            It returns an array of the optimized variable values.
+
+            Returns:
+                numpy.ndarray: Array of optimized variable values.
+            """
         self.add_weights()
         self.add_objective_function()
         self.add_constraints()
