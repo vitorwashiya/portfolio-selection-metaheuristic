@@ -7,6 +7,7 @@ MUT_RATE = 0.5
 MUTA_PERC = 0.5
 MAX_ITER = 6000
 MAX_ITER_WO_IMPRV = 100
+IMPRV_TOL = 1e-8
 RISK_AVER = 0.5
 FIT_FUN = "mean_variance"
 
@@ -25,6 +26,7 @@ class PortfolioSelectionGA:
     - muta_perc: Mutation Percentage (Default = 0.5)
     - max_iter: Maximum Number of Iterations (Default = 1000)
     - max_iter_wo_imprv: Maximum Number of Iterations without Improvement (Default = 100)
+    - imprv_tol: Improvement Tolerance (Default = 1e-8)
     - risk_aver: Risk Aversion Coefficient (Default = 0.5)
     - norm_param: Normalization Parameters with the following keys: ret_min, ret_max, var_min, var_max (Default = None)
     - fit_fun: Fitness Function (Default = "mean_variance")
@@ -40,6 +42,7 @@ class PortfolioSelectionGA:
                  muta_rate: float = MUT_RATE,
                  max_iter: int = MAX_ITER,
                  max_iter_wo_imprv: int = MAX_ITER_WO_IMPRV,
+                 imprv_tol: float = IMPRV_TOL,
                  risk_aver: float = RISK_AVER,
                  norm_param: dict = None,
                  fit_fun: str = FIT_FUN,
@@ -52,6 +55,7 @@ class PortfolioSelectionGA:
         self.muta_perc = 0.5
         self.max_iter = max_iter
         self.max_iter_wo_imprv = max_iter_wo_imprv
+        self.imprv_tol = imprv_tol
         self.risk_aver = risk_aver
         self.norm_param = norm_param
         self.fit_fun = fit_fun
@@ -256,8 +260,8 @@ class PortfolioSelectionGA:
             None
         """
         best_fit = np.min(self.popl_fit)
-        if self.prv_best_fit > best_fit and abs(best_fit -
-                                                self.prv_best_fit) > 1e-5:
+        if self.prv_best_fit > best_fit and abs(
+                best_fit - self.prv_best_fit) > self.imprv_tol:
             self.prv_best_fit = np.min(self.popl_fit)
             self.iter_wo_imprv = 0
         else:
