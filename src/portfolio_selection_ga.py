@@ -9,7 +9,7 @@ MAX_ITER = 6000
 MAX_ITER_WO_IMPRV = 100
 IMPRV_TOL = 1e-8
 RISK_AVER = 0.5
-FIT_FUN = "mean_variance"
+FIT_FUN = "restricted_mean_variance"
 
 
 class PortfolioSelectionGA:
@@ -29,7 +29,7 @@ class PortfolioSelectionGA:
     - imprv_tol: Improvement Tolerance (Default = 1e-8)
     - risk_aver: Risk Aversion Coefficient (Default = 0.5)
     - norm_param: Normalization Parameters with the following keys: ret_min, ret_max, var_min, var_max (Default = None)
-    - fit_fun: Fitness Function (Default = "mean_variance")
+    - fit_fun: Fitness Function (Default = "restricted_mean_variance")
     - verbose: Verbose mode (Default = False)
     '''
 
@@ -59,7 +59,6 @@ class PortfolioSelectionGA:
         self.risk_aver = risk_aver
         self.norm_param = norm_param
         self.fit_fun = fit_fun
-
         self.verbose = verbose
         self.iter = 0
         self.iter_wo_imprv = 0
@@ -107,6 +106,36 @@ class PortfolioSelectionGA:
         fit = self.risk_aver * w_var + (self.risk_aver - 1) * w_exp_ret
         return fit
 
+    def restricted_mean_variance(self, weights) -> float:
+        """
+        Calculates the restricted mean-variance fitness value of a given set of portfolio weights.
+
+        Parameters:
+        weights (array-like): The weights of the portfolio assets.
+
+        Returns:
+        float: The fitness value of the portfolio.
+        """
+        w_exp_ret = np.dot(weights, self.exp_ret_df)
+        w_var = np.linalg.multi_dot([weights, self.cov_mat, weights])
+        ret_pen = 0
+        var_pen = 0
+
+        if self.norm_param:
+            if w_exp_ret < self.norm_param["min_ret_lim"]:
+                ret_pen = np.inf
+            if w_var > self.norm_param["max_var_lim"]:
+                var_pen = np.inf
+
+            w_exp_ret = (w_exp_ret - self.norm_param["ret_min"]) / (
+                self.norm_param["ret_max"] - self.norm_param["ret_min"])
+            w_var = (w_var - self.norm_param["var_min"]) / (
+                self.norm_param["var_max"] - self.norm_param["var_min"])
+
+        fit = self.risk_aver * w_var + (self.risk_aver -
+                                        1) * w_exp_ret + ret_pen + var_pen
+        return fit
+
     def fitness(self, weights) -> float:
         """
         Calculates the fitness value of a given set of portfolio weights.
@@ -119,9 +148,12 @@ class PortfolioSelectionGA:
         """
         if self.fit_fun == "mean_variance":
             return self.mean_variance(weights)
+        elif self.fit_fun == "restricted_mean_variance":
+            return self.restricted_mean_variance(weights)
         else:
             raise ValueError(
-                "Invalid fitness function. Choose from ['mean_variance'].")
+                "Invalid fitness function. Choose from ['mean_variance', 'restricted_mean_variance']."
+            )
 
     def map_fitness(self, popl_list: np.array) -> np.array:
         """
@@ -291,3 +323,48 @@ class PortfolioSelectionGA:
                     f"Iteration: {self.iter} - Best Fitness: {np.min(self.popl_fit)}"
                 )
         return self.popl[np.argmin(self.popl_fit)]
+
+
+def get_returns_and_var(exp_ret_df, cov_df, weights):
+    return np.dot(exp_ret_df,
+                  weights), np.linalg.multi_dot([weights, cov_df, weights])
+
+
+def optimize_markowitz(data, risk_aver, min_ret_percentile, max_var_perc):
+    num_ast = data.shape[1]
+    exp_ret_df = data.mean()
+    cov_mat = data.cov()
+
+    norm_prms = dict()
+    ga_no_risk_aver = PortfolioSelectionGA(data=data,
+                                           num_ast=num_ast,
+                                           exp_ret_df=exp_ret_df,
+                                           cov_mat=cov_mat,
+                                           risk_aver=0).optimize()
+    norm_prms["ret_max"], norm_prms["var_min"] = get_returns_and_var(
+        exp_ret_df, cov_mat, ga_no_risk_aver)
+    ga_full_risk_aver = PortfolioSelectionGA(data=data,
+                                             num_ast=num_ast,
+                                             exp_ret_df=exp_ret_df,
+                                             cov_mat=cov_mat,
+                                             risk_aver=1).optimize()
+    norm_prms["ret_min"], norm_prms["var_max"] = get_returns_and_var(
+        exp_ret_df, cov_mat, ga_full_risk_aver)
+    norm_prms["min_ret_lim"] = np.percentile(exp_ret_df,
+                                             round(100 * min_ret_percentile))
+    norm_prms["max_var_lim"] = norm_prms["var_min"] + (
+        norm_prms["var_max"] - norm_prms["var_min"]) * max_var_perc
+    print(f"norm_prms: {norm_prms}")
+    best_individual = PortfolioSelectionGA(data=data,
+                                           num_ast=num_ast,
+                                           exp_ret_df=exp_ret_df,
+                                           cov_mat=cov_mat,
+                                           risk_aver=risk_aver,
+                                           norm_param=norm_prms).optimize()
+
+    print(f"{get_returns_and_var(exp_ret_df, cov_mat, best_individual)}")
+    print(
+        f"check best individual: {exp_ret_df @ best_individual > norm_prms['min_ret_lim']}, {best_individual @ cov_mat @ best_individual < norm_prms['max_var_lim']}"
+    )
+
+    return best_individual
