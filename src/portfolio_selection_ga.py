@@ -341,14 +341,14 @@ def optimize_markowitz(data, risk_aver, min_ret_percentile, max_var_perc):
                                            exp_ret_df=exp_ret_df,
                                            cov_mat=cov_mat,
                                            risk_aver=0).optimize()
-    norm_prms["ret_max"], norm_prms["var_min"] = get_returns_and_var(
+    norm_prms["ret_max"], norm_prms["var_max"] = get_returns_and_var(
         exp_ret_df, cov_mat, ga_no_risk_aver)
     ga_full_risk_aver = PortfolioSelectionGA(data=data,
                                              num_ast=num_ast,
                                              exp_ret_df=exp_ret_df,
                                              cov_mat=cov_mat,
                                              risk_aver=1).optimize()
-    norm_prms["ret_min"], norm_prms["var_max"] = get_returns_and_var(
+    norm_prms["ret_min"], norm_prms["var_min"] = get_returns_and_var(
         exp_ret_df, cov_mat, ga_full_risk_aver)
     norm_prms["min_ret_lim"] = np.percentile(exp_ret_df,
                                              round(100 * min_ret_percentile))
