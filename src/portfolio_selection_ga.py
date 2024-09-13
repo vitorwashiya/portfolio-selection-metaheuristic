@@ -326,8 +326,8 @@ class PortfolioSelectionGA:
 
 
 def get_returns_and_var(exp_ret_df, cov_df, weights):
-    return np.dot(exp_ret_df,
-                  weights), np.linalg.multi_dot([weights, cov_df, weights])
+    return -np.dot(exp_ret_df, weights), np.linalg.multi_dot(
+        [weights, cov_df, weights])
 
 
 def optimize_markowitz(data, risk_aver, min_ret_percentile, max_var_perc):
@@ -341,20 +341,20 @@ def optimize_markowitz(data, risk_aver, min_ret_percentile, max_var_perc):
                                            exp_ret_df=exp_ret_df,
                                            cov_mat=cov_mat,
                                            risk_aver=0).optimize()
-    norm_prms["ret_max"], norm_prms["var_max"] = get_returns_and_var(
+    norm_prms["ret_min"], norm_prms["var_max"] = get_returns_and_var(
         exp_ret_df, cov_mat, ga_no_risk_aver)
     ga_full_risk_aver = PortfolioSelectionGA(data=data,
                                              num_ast=num_ast,
                                              exp_ret_df=exp_ret_df,
                                              cov_mat=cov_mat,
                                              risk_aver=1).optimize()
-    norm_prms["ret_min"], norm_prms["var_min"] = get_returns_and_var(
+    norm_prms["ret_max"], norm_prms["var_min"] = get_returns_and_var(
         exp_ret_df, cov_mat, ga_full_risk_aver)
     norm_prms["min_ret_lim"] = np.percentile(exp_ret_df,
                                              round(100 * min_ret_percentile))
     norm_prms["max_var_lim"] = norm_prms["var_min"] + (
         norm_prms["var_max"] - norm_prms["var_min"]) * max_var_perc
-    print(f"norm_prms: {norm_prms}")
+    # print(f"norm_prms: {norm_prms}")
     best_individual = PortfolioSelectionGA(data=data,
                                            num_ast=num_ast,
                                            exp_ret_df=exp_ret_df,
@@ -362,9 +362,8 @@ def optimize_markowitz(data, risk_aver, min_ret_percentile, max_var_perc):
                                            risk_aver=risk_aver,
                                            norm_param=norm_prms).optimize()
 
-    print(f"{get_returns_and_var(exp_ret_df, cov_mat, best_individual)}")
-    print(
-        f"check best individual: {exp_ret_df @ best_individual > norm_prms['min_ret_lim']}, {best_individual @ cov_mat @ best_individual < norm_prms['max_var_lim']}"
-    )
-
+    # print(f"{get_returns_and_var(exp_ret_df, cov_mat, best_individual)}")
+    # print(
+    #     f"check best individual: {exp_ret_df @ best_individual > norm_prms['min_ret_lim']}, {best_individual @ cov_mat @ best_individual < norm_prms['max_var_lim']}"
+    # )
     return best_individual
