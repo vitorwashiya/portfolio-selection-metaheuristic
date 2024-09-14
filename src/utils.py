@@ -60,11 +60,10 @@ def find_weights(data: pd.DataFrame, parameters: list) -> pd.DataFrame:
                                      risk_aver=risk_aver,
                                      min_ret_percentile=min_ret_percentile,
                                      max_var_perc=max_var_perc))
-    df["portfolio_return"] = df.apply(
-        lambda x: x["weights"] @ data.iloc[x["idx"]], axis=1)
     df[data.columns] = pd.DataFrame(df.weights.tolist(), index=df.index)
     df = pd.merge(pd.Series(data.index[window:]), df, on="Date", how='left')
     df.fillna(method='ffill', inplace=True)
+    df["portfolio_return"] = df.apply(lambda x: x["weights"] @ data.iloc[x["idx"]], axis=1)
     df.drop(["idx", "data"], axis=1, inplace=True)
     return df
 
