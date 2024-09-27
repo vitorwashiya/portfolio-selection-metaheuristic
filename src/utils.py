@@ -3,16 +3,21 @@ import numpy as np
 from itertools import product
 from tqdm import tqdm
 import json
-from src.portfolio_selection_ga import optimize_markowitz
+try:
+    from src.portfolio_selection_ga import optimize_markowitz
+    from src.portfolio_selection_gurobi import optimize_markowitz_gurobi
+except:
+    from portfolio_selection_ga import optimize_markowitz
+    from portfolio_selection_gurobi import optimize_markowitz_gurobi
 
 
 def get_combinations():
-    rg = [item / 100 for item in list(range(0, 101, 20))]
+    rg = [item / 100 for item in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]]
     risk_aver_list = rg
     min_ret_percentile_list = rg
     max_var_perc_list = rg
-    window_list = [24, 52]
-    step_list = [1, 4]
+    window_list = [12, 24, 52]
+    step_list = [1]
 
     grid = []
     for risk_aver, min_ret_percentile, max_var_perc, window, step in product(
@@ -66,6 +71,27 @@ def find_weights(data: pd.DataFrame, parameters: list) -> pd.DataFrame:
     df["portfolio_return"] = df.apply(lambda x: x["weights"] @ data.iloc[x["idx"]], axis=1)
     df.drop(["idx", "data"], axis=1, inplace=True)
     return df
+
+def find_weights_gurobi(data: pd.DataFrame, parameters: list) -> pd.DataFrame:
+    risk_aver, min_ret_percentile, max_var_perc, window, step = parameters.values(
+    )
+    df = pd.DataFrame(range(window + 1, data.shape[0]+1, step), columns=["idx"])
+    df.idx = df.idx - 1
+    df["data"] = df.idx.apply(lambda x: data.iloc[x - window:x])
+    df["Date"] = df.idx.apply(lambda x: data.index[x])
+    df["weights"] = df.data.apply(
+        lambda x: optimize_markowitz_gurobi(x,
+                                     risk_aver=risk_aver,
+                                     min_ret_percentile=min_ret_percentile,
+                                     max_var_perc=max_var_perc))
+    # df[data.columns] = pd.DataFrame(df.weights.tolist(), index=df.index)
+    df = pd.merge(pd.Series(data.index[window:]), df, on="Date", how='left')
+    df.fillna(method='ffill', inplace=True)
+    df.idx = list(i-1 for i in range(window + 1, data.shape[0]+1, 1))
+    df["portfolio_return"] = df.apply(lambda x: x["weights"] @ data.iloc[x["idx"]], axis=1)
+    df.drop(["idx", "data"], axis=1, inplace=True)
+    return df
+
 
 
 def train(data: pd.DataFrame, grid: list):

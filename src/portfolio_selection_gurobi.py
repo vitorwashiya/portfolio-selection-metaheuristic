@@ -61,7 +61,7 @@ class PortfolioSelectionGurobi:
         Returns:
             None
         """
-        w_exp_ret = self.exp_ret_df @ self.w
+        w_exp_ret = - self.exp_ret_df @ self.w
         w_var = self.w @ self.cov_mat @ self.w
 
         if self.norm_param:
@@ -70,7 +70,7 @@ class PortfolioSelectionGurobi:
             w_var = (w_var - self.norm_param["var_min"]) / (
                 self.norm_param["var_max"] - self.norm_param["var_min"])
 
-        function = self.risk_aver * w_var + (self.risk_aver - 1) * w_exp_ret
+        function = self.risk_aver * w_var + (1 - self.risk_aver) * w_exp_ret
         self.model.setObjective(function, GRB.MINIMIZE)
 
     def add_constraints(self) -> None:
@@ -83,18 +83,11 @@ class PortfolioSelectionGurobi:
             Returns:
                 None
             """
-        w_exp_ret = self.exp_ret_df @ self.w
+        w_exp_ret = - self.exp_ret_df @ self.w
         w_var = self.w @ self.cov_mat @ self.w
         if self.norm_param:
-            min_ret_lim = (
-                self.norm_param["min_ret_lim"] - self.norm_param["ret_min"]
-            ) / (self.norm_param["ret_max"] - self.norm_param["ret_min"])
-            max_var_lim = (
-                self.norm_param["max_var_lim"] - self.norm_param["var_min"]
-            ) / (self.norm_param["var_max"] - self.norm_param["var_min"])
-            self.model.addConstr(w_exp_ret >= min_ret_lim, name="min return")
-            self.model.addConstr(w_var <= max_var_lim, name="max variance")
-
+            self.model.addConstr(w_exp_ret <= self.norm_param["min_ret_lim"], name="min return")
+            self.model.addConstr(w_var <= self.norm_param["max_var_lim"], name="max variance")
         self.model.addConstr(sum(self.w) == 1, name="full investment")
 
     def optimize(self) -> np.ndarray:
@@ -115,7 +108,7 @@ class PortfolioSelectionGurobi:
 
 
 def get_returns_and_var(exp_ret_df, cov_df, weights):
-    return np.dot(exp_ret_df,
+    return -np.dot(exp_ret_df,
                   weights), np.linalg.multi_dot([weights, cov_df, weights])
 
 
@@ -131,16 +124,16 @@ def optimize_markowitz_gurobi(data, risk_aver, min_ret_percentile,
                                                exp_ret_df=exp_ret_df,
                                                cov_mat=cov_mat,
                                                risk_aver=0).optimize()
-    norm_prms["ret_max"], norm_prms["var_min"] = get_returns_and_var(
+    norm_prms["ret_min"], norm_prms["var_max"] = get_returns_and_var(
         exp_ret_df, cov_mat, ga_no_risk_aver)
     ga_full_risk_aver = PortfolioSelectionGurobi(data=data,
                                                  num_ast=num_ast,
                                                  exp_ret_df=exp_ret_df,
                                                  cov_mat=cov_mat,
                                                  risk_aver=1).optimize()
-    norm_prms["ret_min"], norm_prms["var_max"] = get_returns_and_var(
+    norm_prms["ret_max"], norm_prms["var_min"] = get_returns_and_var(
         exp_ret_df, cov_mat, ga_full_risk_aver)
-    norm_prms["min_ret_lim"] = np.percentile(exp_ret_df,
+    norm_prms["min_ret_lim"] = - np.percentile(exp_ret_df,
                                              round(100 * min_ret_percentile))
     norm_prms["max_var_lim"] = norm_prms["var_min"] + (
         norm_prms["var_max"] - norm_prms["var_min"]) * max_var_perc
